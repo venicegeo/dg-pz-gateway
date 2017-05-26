@@ -14,41 +14,15 @@ node {
       ${mvn}/bin/mvn install -U 
     """
   } 
-
   stage('Archive') {
+    git([
+      url: env.GIT_URL ? env.GIT_URL : 'https://github.com/venicegeo/dg-pz-gateway',
+      branch: "master"
+    ])
     sh """
       ${mvn}/bin/mvn clean package -U 
       cp target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
     """
-  }
-
-  stage('CI Deploy') {
-    sh """
-      cp target/piazza-gateway-1.0.0.jar ${root}/pz-gateway.jar
-    """
-    cfBgDeploy()
-  }
-
-  stage('Integration Testing') {
-    postman()
-  }
-   
-  stage('Reset') {
-    git([
-      url: env.GIT_URL ? env.GIT_URL : 'https://github.com/venicegeo/pz-gateway',
-      branch: "master"
-    ])
-  }
-
-  stage('Staging Deploy') {
-    cfPush {
-      cfDomain  = 'apps.sys.coastline.dg-cf-test.net'
-      cfSpace   = 'stage'
-    }
-    cfBgDeploy {
-      cfDomain  = 'apps.sys.coastline.dg-cf-test.net'
-      cfSpace   = 'stage'
-    }
   }
 
   stage('Cleanup') {
